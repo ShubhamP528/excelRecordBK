@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.get("/records", async (req, res) => {
   try {
@@ -46,10 +46,41 @@ app.get("/records", async (req, res) => {
 });
 
 // Upload route
+// app.post("/upload", upload.single("file"), async (req, res) => {
+//   try {
+//     const filePath = req.file.path;
+//     const workbook = XLSX.readFile(filePath);
+//     const sheetName = workbook.SheetNames[0];
+//     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+//       defval: "",
+//     });
+
+//     const transformedData = sheetData.map((row) => ({
+//       Empcode: String(row["Empcode"]).trim(),
+//       FirstName: String(row["First Name"]).trim(),
+//       LastName: String(row["Last Name"]).trim(),
+//       Dept: String(row["Dept"]).trim(),
+//       Region: String(row["Region"]).trim(),
+//       Branch: String(row["Branch"]).trim(),
+//       Hiredate: new Date(row["Hiredate"]),
+//       Salary: Number(row["Salary"]) || 0,
+//     }));
+
+//     const inserted = await Record.insertMany(transformedData);
+
+//     fs.unlinkSync(filePath);
+//     res.json({ message: "Data inserted", count: inserted.length });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Upload failed", error: error.message });
+//   }
+// });
+
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
+    const buffer = req.file.buffer;
+    const workbook = XLSX.read(buffer, { type: "buffer" });
+
     const sheetName = workbook.SheetNames[0];
     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
       defval: "",
@@ -67,8 +98,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }));
 
     const inserted = await Record.insertMany(transformedData);
-
-    fs.unlinkSync(filePath);
     res.json({ message: "Data inserted", count: inserted.length });
   } catch (error) {
     console.error(error);
