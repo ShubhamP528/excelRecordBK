@@ -25,14 +25,6 @@ mongoose
 
 // Middleware
 app.use(express.json());
-
-// Multer config for file upload
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (_, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.get("/records", async (req, res) => {
