@@ -5,7 +5,9 @@ const XLSX = require("xlsx");
 const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
-
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+}
 dotenv.config();
 
 const Record = require("./models/Record");
